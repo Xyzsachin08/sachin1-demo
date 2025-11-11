@@ -1,0 +1,93 @@
+#include <stdio.h>
+
+int main() {
+    int pages[30], frame[3], used[3];
+    int n, i, j, k, choice;
+    
+    printf("Enter number of pages: ");
+    scanf("%d", &n);
+
+    printf("Enter page reference string:\n");
+    for (i = 0; i < n; i++)
+        scanf("%d", &pages[i]); 
+
+    while (1) {
+        printf("\n==== PAGE REPLACEMENT MENU ====\n");
+        printf("1. FCFS\n2. LRU\n3. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        if (choice == 3)
+            break;
+
+        // Initialize frames
+        for (i = 0; i < 3; i++) {
+            frame[i] = -1;
+            used[i] = 0;
+        }
+
+        int faults = 0, index = 0, time = 0;
+
+        // ---------- FCFS ----------
+        if (choice == 1) {
+            printf("\nUsing FCFS Page Replacement:\n");
+            for (i = 0; i < n; i++) {
+                int found = 0;
+                for (j = 0; j < 3; j++) {
+                    if (frame[j] == pages[i])
+                        found = 1;
+                }
+                if (found == 0) {
+                    frame[index] = pages[i];
+                    index = (index + 1) % 3;
+                    faults++;
+                }
+
+                printf("Frames: ");
+                for (k = 0; k < 3; k++)
+                    if (frame[k] != -1)
+                        printf("%d ", frame[k]);
+                printf("\n");
+            }
+            printf("Total Page Faults = %d\n", faults);
+        }
+
+        // ---------- LRU ----------
+        else if (choice == 2) {
+            printf("\nUsing LRU Page Replacement:\n");
+            for (i = 0; i < n; i++) {
+                int found = 0;
+                for (j = 0; j < 3; j++) {
+                    if (frame[j] == pages[i]) {
+                        found = 1;
+                        used[j] = ++time; // update last used time
+                    }
+                }
+
+                if (found == 0) {
+                    int min = 0;
+                    for (j = 1; j < 3; j++)
+                        if (used[j] < used[min])
+                            min = j;
+
+                    frame[min] = pages[i];
+                    used[min] = ++time;
+                    faults++;
+                }
+
+                printf("Frames: ");
+                for (k = 0; k < 3; k++)
+                    if (frame[k] != -1)
+                        printf("%d ", frame[k]);
+                printf("\n");
+            }
+            printf("Total Page Faults = %d\n", faults);
+        }
+
+        else {
+            printf("Invalid choice! Try again.\n");
+        }
+    }
+
+    return 0;
+}
