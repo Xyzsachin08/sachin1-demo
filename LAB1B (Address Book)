@@ -1,0 +1,185 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct AddressBook {
+    int id;
+    char name[50];
+    char phone[15];
+    char email[50];
+};
+
+void createAddressBook();
+void viewAddressBook();
+void insertRecord();
+void deleteRecord();
+void modifyRecord();
+
+int main() {
+    int choice;
+
+    while (1) {
+        printf("\n===== ADDRESS BOOK MENU =====\n");
+        printf("1. Create Address Book\n");
+        printf("2. View Address Book\n");
+        printf("3. Insert a Record\n");
+        printf("4. Delete a Record\n");
+        printf("5. Modify a Record\n");
+        printf("6. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1: createAddressBook(); break;
+            case 2: viewAddressBook(); break;
+            case 3: insertRecord(); break;
+            case 4: deleteRecord(); break;
+            case 5: modifyRecord(); break;
+            case 6: 
+                printf("Exiting...\n");
+                exit(0);
+            default:
+                printf("Invalid choice! Please try again.\n");
+        }
+    }
+    return 0;
+}
+
+void createAddressBook() {
+    FILE *fp;
+    struct AddressBook person;
+    int n, i;
+
+    fp = fopen("addressbook.dat", "wb");
+    if (fp == NULL) {
+        printf("Error creating file!\n");
+        return;
+    }
+
+    printf("How many records you want to add: ");
+    scanf("%d", &n);
+
+    for (i = 0; i < n; i++) {
+        printf("\nEnter details for person %d\n", i + 1);
+        printf("ID: "); scanf("%d", &person.id);
+        printf("Name: "); scanf("%s", person.name);
+        printf("Phone: "); scanf("%s", person.phone);
+        printf("Email: "); scanf("%s", person.email);
+
+        fwrite(&person, sizeof(person), 1, fp);
+    }
+    fclose(fp);
+    printf("\nAddress book created successfully!\n");
+}
+
+void viewAddressBook() {
+    FILE *fp;
+    struct AddressBook person;
+
+    fp = fopen("addressbook.dat", "rb");
+    if (fp == NULL) {
+        printf("File not found! Create address book first.\n");
+        return;
+    }
+
+    printf("\n---- Address Book ----\n");
+    while (fread(&person, sizeof(person), 1, fp)) {
+        printf("ID: %d\n", person.id);
+        printf("Name: %s\n", person.name);
+        printf("Phone: %s\n", person.phone);
+        printf("Email: %s\n\n", person.email);
+    }
+    fclose(fp);
+}
+
+void insertRecord() {
+    FILE *fp;
+    struct AddressBook person;
+
+    fp = fopen("addressbook.dat", "ab");
+    if (fp == NULL) {
+        printf("Error opening file!\n");
+        return;
+    }
+
+    printf("\nEnter details to insert:\n");
+    printf("ID: "); scanf("%d", &person.id);
+    printf("Name: "); scanf("%s", person.name);
+    printf("Phone: "); scanf("%s", person.phone);
+    printf("Email: "); scanf("%s", person.email);
+
+    fwrite(&person, sizeof(person), 1, fp);
+    fclose(fp);
+    printf("Record inserted successfully!\n");
+}
+
+void deleteRecord() {
+    FILE *fp, *temp;
+    struct AddressBook person;
+    int id, found = 0;
+
+    fp = fopen("addressbook.dat", "rb");
+    if (fp == NULL) {
+        printf("File not found!\n");
+        return;
+    }
+
+    temp = fopen("temp.dat", "wb");
+    printf("Enter ID of record to delete: ");
+    scanf("%d", &id);
+
+    while (fread(&person, sizeof(person), 1, fp)) {
+        if (person.id != id)
+            fwrite(&person, sizeof(person), 1, temp);
+        else
+            found = 1;
+    }
+    fclose(fp);
+    fclose(temp);
+
+    remove("addressbook.dat");
+    rename("temp.dat", "addressbook.dat");
+
+    if (found)
+        printf("Record deleted successfully!\n");
+    else
+        printf("Record not found!\n");
+}
+
+void modifyRecord() {
+    FILE *fp;
+    struct AddressBook person;
+    int id, found = 0;
+    long pos;
+
+    fp = fopen("addressbook.dat", "rb+");
+    if (fp == NULL) {
+        printf("File not found!\n");
+        return;
+    }
+
+    printf("Enter ID of record to modify: ");
+    scanf("%d", &id);
+
+    while (fread(&person, sizeof(person), 1, fp)) {
+        if (person.id == id) {
+            printf("\nEnter new details:\n");
+            printf("Name: "); scanf("%s", person.name);
+            printf("Phone: "); scanf("%s", person.phone);
+            printf("Email: "); scanf("%s", person.email);
+
+            pos = ftell(fp) - sizeof(person);
+            fseek(fp, pos, SEEK_SET);
+            fwrite(&person, sizeof(person), 1, fp);
+            found = 1;
+            break;
+        }
+    }
+
+    fclose(fp);
+
+    if (found)
+        printf("Record modified successfully!\n");
+    else
+        printf("Record not found!\n");
+}
